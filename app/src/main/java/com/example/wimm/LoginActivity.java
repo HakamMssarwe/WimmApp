@@ -46,8 +46,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         btnlogin = findViewById(R.id.btnlogin);
         btnlogin.setOnClickListener(this);
-
-
     }
 
     @Override
