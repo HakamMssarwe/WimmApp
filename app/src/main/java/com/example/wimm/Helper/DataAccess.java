@@ -1,5 +1,7 @@
 package com.example.wimm.Helper;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.example.wimm.Modules.Category;
@@ -23,27 +25,34 @@ abstract public class DataAccess {
     static FirebaseFirestore database = FirebaseFirestore.getInstance();
     static CollectionReference usersCollection = database.collection("user");
 
+    public static String userEmail;
     static DocumentReference userDBReference;
     static DocumentSnapshot userInstance;
 
     public static List<Category> categories = new ArrayList<>();
+
+    public static String openedCategory;
     public static List<Item> itemsInCurrentCategory = new ArrayList<>();
+
+
+
 
 
 
     //User DataAccess
     public static void SetUser(String email)
     {
+        userEmail = email;
         try
         {
             userDBReference = usersCollection.document(email);
             userDBReference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (task.isSuccessful())
-                            userInstance = task.getResult();
-                    }
-                });
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful())
+                        userInstance = task.getResult();
+                }
+            });
 
 
         }catch (Exception e)
@@ -55,6 +64,13 @@ abstract public class DataAccess {
 
     public static Map<String, Object> GetUserFields()
     {
+       try{
+           SetUser(userEmail);
+       }catch (Exception e)
+       {
+           return null;
+       }
+
         if (!(userDBReference != null &&  userInstance != null && userInstance.exists()))
             return null;
 
@@ -122,23 +138,26 @@ abstract public class DataAccess {
             return false;
 
 
-       try {
-           userDBReference.collection("category").document(categoryName).delete().addOnCompleteListener(new OnCompleteListener<Void>() {
-               @Override
-               public void onComplete(@NonNull Task<Void> task) {
-                   UpdateCategoriesList();
-               }
-           });
-           return true;
-       }
-       catch (Exception e)
-       {
-           return false;
-       }
+        try {
+            userDBReference.collection("category").document(categoryName).delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    UpdateCategoriesList();
+                }
+            });
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
     }
 
 
     public static boolean UpdateCategoriesList() {
+
+
+
         if (!(userDBReference != null && userInstance != null && userInstance.exists()))
             return false;
 
@@ -149,12 +168,14 @@ abstract public class DataAccess {
                         @Override
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
-                                List<Category> tempCategories = new ArrayList<>();
+                                categories.clear();
                                 for (QueryDocumentSnapshot document : task.getResult()) {
-                                    tempCategories.add(new Category(document.getString("name")));
-                                    categories = tempCategories;
-
+                                    String categoryName = document.getString("name");
+                                    categories.add(new Category(categoryName));
+                                    //Do this later if you have enough time
+                                    //UpdateItemsList(categoryName);
                                 }
+
                             }
                         }
                     });
@@ -169,7 +190,7 @@ abstract public class DataAccess {
 
 
     //Items DataAccess
-    public static boolean AddItem(String itemName, int itemPrice, String selectedCategoryName)
+    public static boolean AddItem(String itemName, String itemPrice, String selectedCategoryName)
     {
         if (!(userDBReference != null && userInstance != null && userInstance.exists()))
             return false;
@@ -206,7 +227,7 @@ abstract public class DataAccess {
         }
     }
 
-    public static boolean UpdateItemPrice(String itemName,int newItemPrice,String selectedCategoryName)
+    public static boolean UpdateItemPrice(String itemName,String newItemPrice,String selectedCategoryName)
     {
         if (!(userDBReference != null && userInstance != null && userInstance.exists()))
             return false;
@@ -226,27 +247,51 @@ abstract public class DataAccess {
 
     public static boolean UpdateItemsList(String selectedCategoryName)
     {
+        {
+            try{
+                SetUser(userEmail);
+            }catch (Exception e)
+            {
+                return false;
+            }
+
         if (!(userDBReference != null && userInstance != null && userInstance.exists()))
             return false;
 
         try {
-            userDBReference.collection("category").document(selectedCategoryName).collection("item").get()
-                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                            if (task.isSuccessful()) {
-                                List<Item> tempItems = new ArrayList<>();
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    tempItems.add(new Item(document.getString("name"),document.getString("price")));
-                                    itemsInCurrentCategory = tempItems;
-                                }
-                            }
+
+            //clear items
+            itemsInCurrentCategory.clear();
+            CollectionReference itemsCollection =
+                            userDBReference.collection("category")
+                            .document(selectedCategoryName)
+                            .collection("item");
+
+
+            itemsCollection.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+
+                    if (task.isSuccessful())
+                    {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            String itemName = document.getString("name");
+                            String itemPrice = document.getString("price");
+
+                            //add Items to the list
+                            itemsInCurrentCategory.add(new Item(itemName,itemPrice));
                         }
-                    });
+                    }
+                }
+            });
+
+
+
 
         }
         catch (Exception e)
         {
+            Log.d("Error", e.toString());
             return false;
         }
         finally {
@@ -255,15 +300,6 @@ abstract public class DataAccess {
 
     }
 
-
-
-
-
-
-
-
-
-
-
-
 }
+}
+

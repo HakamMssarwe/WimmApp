@@ -1,6 +1,7 @@
 package com.example.wimm;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -25,14 +26,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Update User Data
-        DataAccess.UpdateCategoriesList();
-
-
-
         drawer = findViewById(R.id.drawerLayout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
 
         //when you rotate the device this will fix a bug
         if (savedInstanceState == null)

@@ -7,15 +7,16 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.example.wimm.Modules.Category;
+import com.example.wimm.Modules.Item;
 import com.example.wimm.R;
 
 import java.util.List;
 
-public class CategoryAdapter extends BaseAdapter {
+public class ItemAdapter extends BaseAdapter {
 
-    private List<Category> cat_list;
+    private List<Item> cat_list;
 
-    public CategoryAdapter(List<Category> cat_list){
+    public ItemAdapter(List<Item> cat_list){
         this.cat_list = cat_list;
     }
 
@@ -48,8 +49,10 @@ public class CategoryAdapter extends BaseAdapter {
         }
 
         TextView catName = myView.findViewById(R.id.catName);
+        TextView catPrice = myView.findViewById(R.id.catPrice);
 
         catName.setText(cat_list.get(i).GetName());
+        catPrice.setText(cat_list.get(i).GetPrice());
         return myView;
     }
 }
